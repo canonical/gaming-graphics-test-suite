@@ -7,7 +7,11 @@ if ! out=$(glxinfo -B 2>&1); then
   echo "$out"; fail "glxinfo -B"; exit 1
 fi
 check "direct rendering"   grep -q 'direct rendering: Yes' <<< "$out"
-check "llvmpipe renderer"  grep -q 'OpenGL renderer string:.*llvmpipe' <<< "$out"
+if software; then
+  check "llvmpipe renderer" grep -q 'OpenGL renderer string:.*llvmpipe' <<< "$out"
+else
+  check "renderer reported" grep -q 'OpenGL renderer string:' <<< "$out"
+fi
 
 if [ -n "$EXPECTED_MESA_VERSION" ]; then
   want=$(xyz <<< "$EXPECTED_MESA_VERSION")

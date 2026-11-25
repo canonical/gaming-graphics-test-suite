@@ -14,6 +14,10 @@ for m in "${manifests[@]}"; do
   esac
   case $lib in *libvulkan_lvp*) lvp=yes ;; esac
 done
-check "lavapipe ICD present" test $lvp = yes
+if software; then
+  check "lavapipe ICD present" test $lvp = yes
+else
+  skip "lavapipe ICD (SOFTWARE_RENDERING=0)"
+fi
 
 exit $FAILED

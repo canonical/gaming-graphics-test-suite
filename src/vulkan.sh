@@ -5,7 +5,11 @@
 if ! out=$(vulkaninfo --summary 2>&1); then
   echo "$out"; fail "vulkaninfo --summary"; exit 1
 fi
-check "lavapipe (CPU) device present" grep -q 'deviceType.*CPU' <<< "$out"
+if software; then
+  check "lavapipe (CPU) device present" grep -q 'deviceType.*CPU' <<< "$out"
+else
+  check "Vulkan device present" grep -q 'deviceType' <<< "$out"
+fi
 
 if [ -n "$EXPECTED_MESA_VERSION" ]; then
   want=$(xyz <<< "$EXPECTED_MESA_VERSION")
