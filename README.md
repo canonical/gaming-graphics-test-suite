@@ -6,10 +6,9 @@ To run the tests:
 ./src/run-all.sh
 ```
 
-Environment variables:
+Optional environment variables:
 
 ```
-SOFTWARE_RENDERING # Set to 1 by default for software rendering.
-LIBGL_ALWAYS_SOFTWARE # Set to 1 by default for software rendering.
-VK_LOADER_DRIVERS_SELECT # Set to *lvp* for software rendering with lavapipe.
+LIBGL_ALWAYS_SOFTWARE=1  # Force llvmpipe for OpenGL even if a GPU is present.
+VK_LOADER_DRIVERS_SELECT='*lvp*'  # Force lavapipe for Vulkan even if a GPU is present.
 ```

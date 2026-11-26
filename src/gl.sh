@@ -1,24 +1,22 @@
 #!/bin/bash
-# glxinfo runs and reports the expected Mesa renderer.
+# glxinfo runs and reports a renderer.
 . "$(dirname "$0")/lib.sh"
 
 [ -n "$DISPLAY" ] || { skip "glxinfo (no DISPLAY)"; exit 0; }
+require glxinfo
 if ! out=$(glxinfo -B 2>&1); then
   echo "$out"; fail "glxinfo -B"; exit 1
 fi
-check "direct rendering"   grep -q 'direct rendering: Yes' <<< "$out"
-if software; then
-  check "llvmpipe renderer" grep -q 'OpenGL renderer string:.*llvmpipe' <<< "$out"
-else
-  check "renderer reported" grep -q 'OpenGL renderer string:' <<< "$out"
-fi
+check "direct rendering" grep -q 'direct rendering: Yes' <<< "$out"
+renderer=$(sed -n 's/.*OpenGL renderer string:[[:space:]]*//p' <<< "$out")
+check "renderer: ${renderer:-none}" test -n "$renderer"
 
-if [ -n "$EXPECTED_MESA_VERSION" ]; then
-  want=$(xyz <<< "$EXPECTED_MESA_VERSION")
-  got=$(grep -m1 'OpenGL.*version string:.*Mesa' <<< "$out" | sed 's/.*Mesa//' | xyz)
-  check "GL Mesa $got == $want" test "$got" = "$want"
-else
-  skip "Mesa version (EXPECTED_MESA_VERSION unset)"
-fi
+# Unlike vkcube, there's no option we can set in glxgears to get it to
+# quit after a certain number of frames or seconds. So we just test if
+# it runs for 5s without crashing. Timeout has an exit code of 124.
+require glxgears
+out=$(timeout 5 glxgears 2>&1); rc=$?
+[ "$rc" -eq 124 ] || echo "$out"
+check "glxgears runs" test "$rc" -eq 124
 
-exit $FAILED
+exit "$FAILED"

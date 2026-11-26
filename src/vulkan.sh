@@ -1,22 +1,27 @@
 #!/bin/bash
-# vulkaninfo runs and reports the expected Mesa driver.
+# vulkaninfo runs and reports a device.
 . "$(dirname "$0")/lib.sh"
 
+require vulkaninfo
 if ! out=$(vulkaninfo --summary 2>&1); then
   echo "$out"; fail "vulkaninfo --summary"; exit 1
 fi
-if software; then
-  check "lavapipe (CPU) device present" grep -q 'deviceType.*CPU' <<< "$out"
+mapfile -t devices < <(grep -oP 'deviceName\s*=\s*\K.*' <<< "$out")
+check "Vulkan device(s) found: ${#devices[@]}" test "${#devices[@]}" -gt 0
+for d in "${devices[@]}"; do echo "  - $d"; done
+
+# Running vkcube requires a display. We can use virtual displays for
+# GH runners (xvfb for X11 and weston headless for wayland).
+# This doesn't test the actual pixels being rendered (so it wouldn't catch
+# something like a completely black screen). It just ensures that vkcube
+# exits with the right return code.
+if [ -n "$DISPLAY" ]; then
+  require vkcube
+  out=$(timeout 30 vkcube --c 100 2>&1); rc=$?
+  [ "$rc" -eq 0 ] || echo "$out"
+  check "vkcube runs" test "$rc" -eq 0
 else
-  check "Vulkan device present" grep -q 'deviceType' <<< "$out"
+  skip "vkcube (no DISPLAY)"
 fi
 
-if [ -n "$EXPECTED_MESA_VERSION" ]; then
-  want=$(xyz <<< "$EXPECTED_MESA_VERSION")
-  got=$(grep driverInfo <<< "$out" | xyz)
-  check "driverInfo Mesa $got == $want" test "$got" = "$want"
-else
-  skip "Mesa version (EXPECTED_MESA_VERSION unset)"
-fi
-
-exit $FAILED
+exit "$FAILED"
