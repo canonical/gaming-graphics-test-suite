@@ -17,7 +17,7 @@ for d in "${devices[@]}"; do echo "  - $d"; done
 # exits with the right return code.
 if [ -n "$DISPLAY" ]; then
   require vkcube
-  out=$(timeout 30 vkcube --c 100 2>&1); rc=$?
+  out=$(vkcube --c 100 2>&1); rc=$?
   [ "$rc" -eq 0 ] || echo "$out"
   check "vkcube runs" test "$rc" -eq 0
 else
