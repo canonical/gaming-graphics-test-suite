@@ -15,13 +15,23 @@ for d in "${devices[@]}"; do echo "  - $d"; done
 # This doesn't test the actual pixels being rendered (so it wouldn't catch
 # something like a completely black screen). It just ensures that vkcube
 # exits with the right return code.
-if [ -n "$DISPLAY" ]; then
+run_vkcube() { # $1 = wsi (xcb|wayland)
   require vkcube
-  out=$(vkcube --c 100 2>&1); rc=$?
+  out=$(vkcube --c 100 --wsi "$1" 2>&1); rc=$?
   [ "$rc" -eq 0 ] || echo "$out"
-  check "vkcube runs" test "$rc" -eq 0
+  check "vkcube runs ($1)" test "$rc" -eq 0
+}
+
+if [ -n "$DISPLAY" ]; then
+  run_vkcube xcb
 else
-  skip "vkcube (no DISPLAY)"
+  skip "vkcube x11 (no DISPLAY)"
+fi
+
+if [ -n "$WAYLAND_DISPLAY" ]; then
+  run_vkcube wayland
+else
+  skip "vkcube wayland (no WAYLAND_DISPLAY)"
 fi
 
 exit "$FAILED"
